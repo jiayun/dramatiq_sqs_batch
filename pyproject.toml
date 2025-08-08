@@ -26,7 +26,7 @@ classifiers = [
 packages = [{include = "batch_sqs_broker"}]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.8.1"
 dramatiq = "^1.12.0"
 dramatiq-sqs = "^0.2.0"
 boto3 = "^1.20.0"
