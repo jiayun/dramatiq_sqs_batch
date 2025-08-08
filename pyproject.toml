@@ -1,0 +1,63 @@
+[tool.poetry]
+name = "dramatiq_sqs_batch"
+version = "1.0.0"
+description = "A high-performance batch processing broker for AWS SQS with intelligent message splitting"
+authors = ["Jiayun Zhou <jiayun@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/jiayun/dramatiq_sqs_batch"
+repository = "https://github.com/jiayun/dramatiq_sqs_batch"
+documentation = "https://github.com/jiayun/dramatiq_sqs_batch/blob/main/README.md"
+keywords = ["aws", "sqs", "dramatiq", "message-queue", "batch-processing"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Distributed Computing",
+]
+packages = [{include = "batch_sqs_broker"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+dramatiq = "^1.12.0"
+dramatiq-sqs = "^0.2.0"
+boto3 = "^1.20.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.0.0"
+pytest-cov = "^4.0.0"
+black = "^23.0.0"
+isort = "^5.10.0"
+flake8 = "^6.0.0"
+mypy = "^1.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 120
+target-version = ['py38']
+
+[tool.isort]
+profile = "black"
+line_length = 120
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+show_error_codes = true
