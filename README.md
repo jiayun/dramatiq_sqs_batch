@@ -1,5 +1,10 @@
 # BatchSQSBroker
 
+[![PyPI version](https://badge.fury.io/py/dramatiq-sqs-batch.svg)](https://badge.fury.io/py/dramatiq-sqs-batch)
+[![Python Versions](https://img.shields.io/pypi/pyversions/dramatiq-sqs-batch.svg)](https://pypi.org/project/dramatiq-sqs-batch/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Downloads](https://pepy.tech/badge/dramatiq-sqs-batch)](https://pepy.tech/project/dramatiq-sqs-batch)
+
 A high-performance batch processing broker for AWS SQS with intelligent message splitting, retry mechanisms, and comprehensive monitoring. Optimized for handling high-volume task queues with automatic batching, exponential backoff, and thread-safe operations.
 
 ## Features
