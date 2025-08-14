@@ -132,9 +132,126 @@ broker.flush_all()
 
 ### Graceful Shutdown
 
+**Important**: When using BatchSQSBroker in non-worker applications (e.g., web frameworks), you **MUST** handle graceful shutdown to avoid message loss.
+
+#### Why Graceful Shutdown Matters
+
+BatchSQSBroker buffers messages in memory before sending them to SQS. If your application terminates without calling `broker.close()`, any buffered messages will be lost. This is especially critical in:
+
+- Web applications (FastAPI, Flask, Django)
+- Containerized environments (Docker, Kubernetes, ECS)
+- Serverless functions with lifecycle hooks
+
+#### Basic Shutdown
+
 ```python
-# Proper cleanup
+# Always call close() before application exits
 broker.close()
+```
+
+#### FastAPI with Gunicorn
+
+```python
+# app/main.py
+from fastapi import FastAPI
+import dramatiq
+
+app = FastAPI()
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Ensure broker flushes all buffered messages on shutdown."""
+    try:
+        broker = dramatiq.get_broker()
+        if hasattr(broker, 'close'):
+            broker.close()
+            print("BatchSQSBroker closed successfully")
+    except Exception as e:
+        print(f"Error closing broker: {e}")
+
+# gunicorn_conf.py
+def worker_int(worker):
+    """Handle SIGINT/SIGQUIT gracefully."""
+    import dramatiq
+    try:
+        broker = dramatiq.get_broker()
+        if hasattr(broker, 'close'):
+            broker.close()
+    except Exception:
+        pass
+```
+
+#### Flask with Gunicorn
+
+```python
+# app.py
+from flask import Flask
+import atexit
+import dramatiq
+
+app = Flask(__name__)
+
+def cleanup_broker():
+    """Cleanup function to be called on exit."""
+    try:
+        broker = dramatiq.get_broker()
+        if hasattr(broker, 'close'):
+            broker.close()
+            print("BatchSQSBroker closed successfully")
+    except Exception as e:
+        print(f"Error closing broker: {e}")
+
+# Register cleanup function
+atexit.register(cleanup_broker)
+
+# For Gunicorn, also add worker hooks in gunicorn_conf.py (same as FastAPI example)
+```
+
+#### Docker/Kubernetes
+
+Ensure your container handles SIGTERM properly:
+
+```dockerfile
+# Dockerfile
+# Use exec form to ensure signals are passed correctly
+CMD ["python", "app.py"]
+# Or for Gunicorn
+CMD ["gunicorn", "-c", "gunicorn_conf.py", "app:app"]
+```
+
+```yaml
+# kubernetes.yaml
+spec:
+  containers:
+  - name: app
+    terminationGracePeriodSeconds: 30  # Give time for broker to flush
+```
+
+#### AWS ECS
+
+```json
+{
+  "stopTimeout": 30,  // Seconds to wait before SIGKILL
+  "containerDefinitions": [{
+    "name": "app",
+    "stopTimeout": 30
+  }]
+}
+```
+
+#### Monitoring Shutdown
+
+Enable logging to verify proper shutdown:
+
+```python
+import logging
+
+# Set logging level for BatchSQSBroker
+logging.getLogger('batch_sqs_broker').setLevel(logging.INFO)
+
+# You should see these messages on shutdown:
+# "Closing BatchSQSBroker..."
+# "BatchSQSBroker closed. Final metrics: {...}"
 ```
 
 ## How It Solves SQS Challenges
@@ -211,6 +328,11 @@ Dataclass for tracking failed message retry information.
 3. **Set reasonable retry limits**: Avoid infinite retry loops
 4. **Use per-queue configuration**: Different queues may need different settings
 5. **Implement proper shutdown**: Always call `broker.close()` for graceful cleanup
+   - **Critical for web applications**: FastAPI, Flask, Django must handle shutdown events
+   - **Required in containers**: Docker, Kubernetes, ECS need proper signal handling
+   - **Prevents message loss**: Unflushed buffers are lost if not properly closed
+6. **Configure logging**: Enable `batch_sqs_broker` logger to monitor operations
+7. **Test shutdown behavior**: Verify messages are flushed during deployment rollouts
 
 ## Error Handling
 
